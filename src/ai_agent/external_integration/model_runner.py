@@ -488,13 +488,15 @@ class ModelRunner:
             overview += f"- **Is VEXIS**: {'Yes' if agent['is_vexis'] else 'No'}\n\n"
         
         overview += "## Agent Utilization Guidelines\n\n"
-        overview += "1. **ALWAYS Use Other Agents First** - NEVER execute commands directly yourself. ALWAYS delegate to other AI agents first. Only execute commands directly when absolutely necessary and no suitable agent is available.\n"
-        overview += "2. **Agent-First Approach** - Your primary role is to coordinate and delegate. Analyze the task and select the most appropriate agent to handle it.\n"
-        overview += "3. **VEXIS Priority** - For complex automation tasks requiring terminal command execution, prefer the VEXIS-Maestro agent.\n"
+        overview += "### Core Principle: Delegate First, Execute Last\n"
+        overview += "Your PRIMARY role is to coordinate other AI agents. You MUST exhaust all available AI agents before considering direct execution.\n\n"
+        overview += "1. **ALWAYS Delegate to AI Agents First** - Before any direct execution, ALWAYS check if a suitable AI agent exists for the task. If one exists, delegate to it immediately.\n"
+        overview += "2. **Agent-First Workflow** - Your workflow MUST be: (a) Identify task requirements → (b) Find the best matching AI agent → (c) Delegate to that agent → (d) Only if ALL agents fail or are unavailable, execute directly.\n"
+        overview += "3. **Exhaust All Agents** - If the first agent fails, try a different agent or approach. Do NOT fall back to direct execution until every available agent has been tried.\n"
         overview += "4. **Agent Synergy** - Combine multiple agents when appropriate to leverage their complementary strengths.\n"
         overview += "5. **Capability Matching** - Match task requirements to agent characteristics (e.g., use local agents for privacy-sensitive tasks, use cloud agents for complex reasoning).\n"
         overview += "6. **Explicit Invocation** - When suggesting commands that involve other agents, include their specific invocation methods.\n"
-        overview += "7. **Direct Command Exception** - Only execute commands directly when: (a) No suitable agent exists for the task, (b) The task requires immediate system-level access that agents cannot provide, or (c) All agent attempts have failed and direct execution is the last resort.\n"
+        overview += "7. **Self-Execution: ABSOLUTE LAST RESORT** - Only execute commands directly when ALL of the following are true: (a) No suitable agent exists for the task, (b) The task requires immediate system-level access that no agent can provide, AND (c) Every available agent has been attempted and failed. Self-execution is the exception, not the default.\n"
         
         return overview
 
@@ -532,13 +534,30 @@ You are operating as part of the VEXIS-Maestro automation system. Your responses
 4. **Code Block Re-output** - Since success is determined by the presence of properly formatted code blocks, you MUST re-output code blocks as many times as necessary until the task succeeds. Never stop at "analysis" or "explanation" - always provide executable code blocks.
 5. **Proactive Error Recovery** - Anticipate failures before they occur and prepare fallback strategies. If an error occurs, immediately propose and execute the next best alternative without waiting for user input."""
         
-        # Add agent overview for Phase 1 only
-        if task_type == TaskType.PHASE1_COMMAND_SUGGESTION:
+        # Add agent overview for Phase 1 and Phase 4
+        if task_type in (TaskType.PHASE1_COMMAND_SUGGESTION, TaskType.PHASE4_LOG_EVALUATION):
             agent_data = self._load_agent_definitions()
             if agent_data:
                 agent_overview = self._format_agent_overview(agent_data)
                 base_instructions += agent_overview
-                self.logger.info("Agent overview injected into Phase 1 system prompt")
+                self.logger.info(f"Agent overview injected into {task_type.value} system prompt")
+        
+        # Add phase-specific agent delegation instructions for Phase 4
+        if task_type == TaskType.PHASE4_LOG_EVALUATION:
+            phase4_agent_instructions = """
+## Phase 4: Failure Recovery - Agent Delegation Protocol
+
+When you determine that a command has FAILED, follow this protocol:
+
+1. **Analyze the Failure** - Identify what went wrong and whether a different approach might succeed.
+2. **Delegate to an AI Agent** - If a different approach is needed, generate a command that delegates to an appropriate AI agent (see Available AI Agents above). Do NOT attempt the same failing command again.
+3. **Try Multiple Agents** - If one agent's approach fails, try delegating to a different agent with a modified strategy.
+4. **Self-Execution as Last Resort** - Only suggest direct terminal commands when NO available AI agent can handle the task, or all agents have been exhausted.
+5. **Report Which Agent Was Used** - When suggesting delegation, clearly indicate which agent should be invoked and why.
+
+Remember: Your job in Phase 4 is not just to evaluate success/failure, but to RECOVER from failures by intelligently delegating to the right AI agent."""
+            base_instructions += phase4_agent_instructions
+            self.logger.info("Phase 4 agent delegation instructions injected")
         
         # Add custom system prompt for Phase 1 only (Amore configuration)
         if task_type == TaskType.PHASE1_COMMAND_SUGGESTION:
