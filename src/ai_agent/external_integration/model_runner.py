@@ -63,7 +63,7 @@ class PromptTemplate:
     def _load_templates(self) -> Dict[str, str]:
         """Load prompt templates for 5-Phase CLI Architecture"""
         return {
-            TaskType.PHASE1_COMMAND_SUGGESTION.value: '''I have received the instruction: "{user_prompt}". What commands should I run to carry this out? Please tell me. I can only use terminal commands, so do not suggest GUI operations. The OS I am using is {os_info}.
+            TaskType.PHASE1_COMMAND_SUGGESTION.value: '''I have received the instruction: "{user_prompt}". Determine the best way to accomplish this task. I can use terminal commands or delegate to specialized AI agents depending on the task. The OS I am using is {os_info}.
 
 CRITICAL: Plan for success by considering:
 1. The primary approach to accomplish this task
