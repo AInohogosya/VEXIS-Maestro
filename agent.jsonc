@@ -1,0 +1,16 @@
+// 全ての文章は英語で書きましょう。
+{
+  "agents": [
+    {
+      "name": "OpenCode",
+      "invocation_method": "opencode run \"Prompt here\"",
+      "characteristics": [
+        "OpenCode is an AI agent for coding.",
+        "When you want to code, call this agent.",
+        "The base model is DeepSeek v4 Flash.",
+        "Please write prompts in English."
+      ],
+      "is_vexis": false
+    }
+  ]
+}
