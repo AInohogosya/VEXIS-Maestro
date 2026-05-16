@@ -1214,10 +1214,14 @@ class TerminalHistory:
         
         try:
             # Start process with Popen for streaming output (shell=False for security)
+            # stdin=DEVNULL prevents any command from blocking indefinitely
+            # waiting for interactive input (e.g. confirmation prompts, pager
+            # programs, password prompts, etc.).
             if self._platform == "windows":
                 process = subprocess.Popen(
                     ['cmd.exe', '/c', script_path],
                     shell=False,
+                    stdin=subprocess.DEVNULL,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     cwd=str(self._current_directory)
@@ -1226,6 +1230,7 @@ class TerminalHistory:
                 process = subprocess.Popen(
                     ['bash', script_path],
                     shell=False,
+                    stdin=subprocess.DEVNULL,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     cwd=str(self._current_directory),
